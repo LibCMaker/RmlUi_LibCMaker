@@ -39,8 +39,10 @@
 #include <include/core/SkFont.h>
 #include <include/core/SkFontMetrics.h>
 #include <include/core/SkFontMgr.h>
+#include <include/core/SkSpan.h>
 #include <include/core/SkSurface.h>
 #include <include/core/SkTypeface.h>
+#include <include/ports/SkFontMgr_empty.h>
 
 #include <algorithm>
 
@@ -85,15 +87,14 @@ bool SkiaType::GetFaceVariations(
   sk_sp<SkTypeface> typeface;
 
   if(sk_sp<SkData> skData = SkData::MakeWithoutCopy(data.data(), data.size())) {
-    typeface =
-        SkFontMgr::RefDefault()->makeFromData(std::move(skData), face_index);
+    typeface = SkFontMgr_New_Custom_Empty()->makeFromData(std::move(skData));
   }
 
   if(!typeface) {
     return false;
   }
 
-  int coordinateCount = typeface->getVariationDesignPosition(nullptr, 0);
+  int coordinateCount = typeface->getVariationDesignPosition({});
   if(coordinateCount == -1) {
     return false;
   }
@@ -101,7 +102,7 @@ bool SkiaType::GetFaceVariations(
   SkFontArguments::VariationPosition::Coordinate coordinates[coordinateCount];
 
   coordinateCount =
-      typeface->getVariationDesignPosition(coordinates, coordinateCount);
+      typeface->getVariationDesignPosition({coordinates, coordinateCount});
   if(coordinateCount == -1) {
     return false;
   }
@@ -156,7 +157,7 @@ Rml::SkiaTypeHandle SkiaType::LoadFace(
     int /*named_style_index*/)
 {
   if(sk_sp<SkData> skData = SkData::MakeWithoutCopy(data.data(), data.size())) {
-    if(sk_sp<SkTypeface> typeface = SkFontMgr::RefDefault()->makeFromData(
+    if(sk_sp<SkTypeface> typeface = SkFontMgr_New_Custom_Empty()->makeFromData(
            std::move(skData), face_index)) {
       return reinterpret_cast<Rml::SkiaTypeHandle>(typeface.release());
     }
@@ -283,14 +284,14 @@ int SkiaType::GetKerning(
   SkGlyphID glyphs[] = {
       static_cast<SkGlyphID>(lhs), static_cast<SkGlyphID>(rhs)};
   int32_t adjustments[1];
-  bool res = skFace->getKerningPairAdjustments(glyphs, 2, adjustments);
+  bool res = skFace->getKerningPairAdjustments({glyphs, 2}, {adjustments, 1});
   return res ? adjustments[0] >> 6 : 0;
 }
 
 bool SkiaType::HasKerning(Rml::SkiaTypeHandle face)
 {
   SkTypeface* skFace = reinterpret_cast<SkTypeface*>(face);
-  return skFace->getKerningPairAdjustments(nullptr, 0, nullptr);
+  return skFace->getKerningPairAdjustments({}, {});
 }
 
 static void BuildGlyphMap(
@@ -361,8 +362,9 @@ static bool BuildGlyphs(
   SkPaint skPaint;
   skPaint.setColor(FONT_COLOR);
 
-  skFace.unicharsToGlyphs(skUnichars, code_cnt, skGlyphs);
-  skFont.getWidthsBounds(skGlyphs, code_cnt, widths, bounds, &skPaint);
+  skFace.unicharsToGlyphs({skUnichars, code_cnt}, {skGlyphs, code_cnt});
+  skFont.getWidthsBounds(
+      {skGlyphs, code_cnt}, {widths, code_cnt}, {bounds, code_cnt}, &skPaint);
   // skFont.getPos(skGlyphs, code_cnt, skPos);
 
   for(size_t i = 0; i < code_cnt; ++i) {
@@ -406,7 +408,7 @@ static bool BuildGlyphs(
       glyph.bitmap_data = glyph.bitmap_owned_data.get();
       Rml::byte* destination_bitmap = glyph.bitmap_owned_data.get();
 
-      sk_sp<SkSurface> skSurface = SkSurface::MakeRasterDirect(
+      sk_sp<SkSurface> skSurface = SkSurfaces::WrapPixels(
           imageInfo, destination_bitmap, imageInfo.minRowBytes());
       if(!skSurface) {
         return false;
@@ -421,7 +423,8 @@ static bool BuildGlyphs(
           {static_cast<SkScalar>(glyph.bearing.x),
            static_cast<SkScalar>(glyph.bearing.y)}};
       skCanvas->clear(BACKGROUND_COLOR);
-      skCanvas->drawGlyphs(1, &skGlyphs[i], skPositions, {0, 0}, skFont, skPaint);
+      skCanvas->drawGlyphs(
+          {&skGlyphs[i], 1}, {skPositions, 1}, {0, 0}, skFont, skPaint);
     }
   }
 

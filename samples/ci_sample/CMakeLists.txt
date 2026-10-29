@@ -3,7 +3,7 @@
 #  Purpose:  A CMake build scripts for build libraries with CMake
 #  Author:   NikitaFeodonit, nfeodonit@yandex.com
 # ****************************************************************************
-#    Copyright (c) 2017-2025 NikitaFeodonit
+#    Copyright (c) 2017-2026 NikitaFeodonit
 #
 #    This file is part of the LibCMaker project.
 #
@@ -36,29 +36,59 @@ cmake_minimum_required(VERSION ${cmr_CMAKE_MIN_VER})
 include("${LibCMaker_DIR}/samples/cmr_samples_common_macros.cmake")
 cmr_common_sample_part__before_project()
 
-project(LibCMaker_RmlUi_Compile_Test CXX C)
+project(RmlUi_LibCMaker_Compile_Test CXX C)
 
 cmr_common_sample_part__project_settings()
 
 
 #-----------------------------------------------------------------------
-# Common sample part
+# Unpack, configure, build and find the required libraries
 #-----------------------------------------------------------------------
 
-#cmr_common_sample_part__add_executable()
+macro(skia_opt _option _value)
 
+  if(DEFINED CACHE{${_option}})
+    set(_opt_value ${${_option}})
+  else()
+    if(${_value})
+      set(_opt_value "true")
+    else()
+      set(_opt_value "false")
+    endif()
+  endif()
 
-#-----------------------------------------------------------------------
-# Download, configure, build, install and find the required libraries
-#-----------------------------------------------------------------------
+  set(${_option} "${_opt_value}" CACHE STRING "${_option}")
+  unset(_opt_value)
+endmacro()
 
-include(${LibCMaker_LIB_DIR}/LibCMaker_Skia/cmr_build_skia.cmake)
-include(${LibCMaker_LIB_DIR}/LibCMaker_RmlUi/cmr_build_rmlui.cmake)
+skia_opt(skia_use_dawn true)
+skia_opt(skia_use_system_dawn true)
+skia_opt(skia_use_icu true)
+skia_opt(skia_use_system_icu true)
+
+if(skia_use_dawn AND skia_use_system_dawn)
+  list(APPEND CMAKE_PREFIX_PATH ${LibCMaker_LIB_DIR}/Dawn_LibCMaker/cmake)
+  find_package(Dawn REQUIRED CONFIG)
+endif()
+
+if(skia_use_icu AND skia_use_system_icu)
+  list(APPEND CMAKE_PREFIX_PATH ${LibCMaker_LIB_DIR}/ICU_LibCMaker/cmake)
+  find_package(ICU REQUIRED CONFIG)
+endif()
+
+list(APPEND CMAKE_PREFIX_PATH ${LibCMaker_LIB_DIR}/Skia_LibCMaker/cmake)
+find_package(Skia REQUIRED CONFIG)
+
+list(APPEND CMAKE_PREFIX_PATH ${LibCMaker_LIB_DIR}/RmlUi_LibCMaker/cmake)
+find_package(RmlUi REQUIRED CONFIG)
 
 
 #-----------------------------------------------------------------------
 # Build the executable of the example
 #-----------------------------------------------------------------------
+
+#cmr_common_sample_part__add_executable()
+#cmr_common_sample_part__set_cxx_c_standards()
 
 #set(example_src_DIR "${CMAKE_CURRENT_LIST_DIR}/src")
 
@@ -66,31 +96,45 @@ include(${LibCMaker_LIB_DIR}/LibCMaker_RmlUi/cmr_build_rmlui.cmake)
 #  PRIVATE
 #    ${example_src_DIR}/example.cpp
 #)
-#set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 
 
 #-----------------------------------------------------------------------
 # Link to the libraries
 #-----------------------------------------------------------------------
 
-# RmlUi
-#if(NOT BUILD_SHARED_LIBS)
-#  target_compile_definitions(${PROJECT_NAME} PRIVATE RMLUI_STATIC_LIB)
-#endif()
-#if(NO_THIRDPARTY_CONTAINERS)
-#  target_compile_definitions(${PROJECT_NAME} PRIVATE RMLUI_NO_THIRDPARTY_CONTAINERS)
-#endif()
-#target_link_libraries(${PROJECT_NAME} PRIVATE RmlDebugger RmlCore)
+# # RmlUi
+# if(NOT BUILD_SHARED_LIBS)
+#   target_compile_definitions(${PROJECT_NAME} PRIVATE RMLUI_STATIC_LIB)
+# endif()
+# if(NO_THIRDPARTY_CONTAINERS)
+#   target_compile_definitions(${PROJECT_NAME} PRIVATE RMLUI_NO_THIRDPARTY_CONTAINERS)
+# endif()
+# target_link_libraries(${PROJECT_NAME} PRIVATE
+#   RmlUi::RmlUi
+# )
 
-# Skia
-#target_link_libraries(${PROJECT_NAME} PRIVATE
-#  Skia::skshaper Skia::skunicode Skia::skia
-#)
+# # Skia
+# target_link_libraries(${PROJECT_NAME} PRIVATE
+#   Skia::skshaper Skia::skunicode Skia::skia
+# )
+
+# # Dawn
+# if(skia_use_dawn AND skia_use_system_dawn)
+#   target_link_libraries(${PROJECT_NAME} PRIVATE
+#     dawn::webgpu_dawn
+#   )
+# endif()
+
+# # ICU
+# if(skia_use_icu AND skia_use_system_icu)
+#   target_link_libraries(${PROJECT_NAME} PRIVATE
+#     ICU::io ICU::i18n ICU::uc ICU::data
+#   )
+# endif()
 
 
 #-----------------------------------------------------------------------
 # Testing
 #-----------------------------------------------------------------------
 
-set(test_src_DIR "${CMAKE_CURRENT_LIST_DIR}/src")
-add_subdirectory(test)
+cmr_common_test_part__add_subdirectory_test()

@@ -3,7 +3,7 @@
 #  Purpose:  A CMake build scripts for build libraries with CMake
 #  Author:   NikitaFeodonit, nfeodonit@yandex.com
 # ****************************************************************************
-#    Copyright (c) 2017-2025 NikitaFeodonit
+#    Copyright (c) 2017-2026 NikitaFeodonit
 #
 #    This file is part of the LibCMaker project.
 #
@@ -71,25 +71,6 @@ if(BUILD_TESTING)
 
     if((MSVC OR XCODE) AND NOT IOS)
       set(test_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>")
-    endif()
-
-
-    if(TARGET Skia::icudata)
-      get_target_property(icudata_LIB Skia::icudata IMPORTED_LOCATION)
-
-      add_custom_target(prepare_icudtl_dat
-        COMMAND
-          ${CMAKE_COMMAND} -E make_directory "${test_BIN_DIR}"
-
-        # `icudtl.dat` file
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${icudata_LIB}"
-          "${test_BIN_DIR}"
-      )
-
-      add_dependencies(${test_NAME}
-        prepare_icudtl_dat
-      )
     endif()
 
     add_custom_target(prepare_test_assets
@@ -160,6 +141,7 @@ if(BUILD_TESTING)
 
   cmr_common_test_part__ios()
   cmr_common_test_part__set_common_tests_properties()
+  cmr_common_test_part__set_cxx_c_standards()
 
 
   #-----------------------------------------------------------------------
@@ -205,21 +187,38 @@ if(BUILD_TESTING)
       ${test_src_DIR}/RmlUiSamples/PlatformExtensions.h
   )
 
-  set_target_properties(${test_NAME} PROPERTIES
-    CXX_STANDARD 17
-    C_STANDARD 11
-  )
-
   target_include_directories(${test_NAME}
     PRIVATE
       ${test_src_DIR}
   )
 
   # RmlUi
-  target_link_libraries(${test_NAME} PRIVATE RmlUi::RmlUi)
+  target_link_libraries(${test_NAME} PRIVATE
+    RmlUi::RmlUi
+  )
 
   # Skia
   target_link_libraries(${test_NAME} PRIVATE
-    Skia::skshaper Skia::skunicode Skia::skia
+    Skia::skshaper Skia::skunicode_icu Skia::skunicode Skia::skia
   )
+
+  # Dawn
+  if(skia_use_dawn AND skia_use_system_dawn)
+    target_link_libraries(${test_NAME} PRIVATE
+      dawn::webgpu_dawn
+    )
+  endif()
+
+  # ICU
+  if(skia_use_icu)
+    target_compile_definitions(${test_NAME} PRIVATE
+      SKIA_USE_ICU
+    )
+
+    if(skia_use_system_icu)
+      target_link_libraries(${test_NAME} PRIVATE
+        ICU::io ICU::i18n ICU::uc ICU::data
+      )
+    endif()
+  endif()
 endif()

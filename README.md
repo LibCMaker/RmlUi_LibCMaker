@@ -1,4 +1,4 @@
-# LibCMaker_RmlUi
+# RmlUi_LibCMaker
 
 The CMake build scripts for the RmlUi library building with CMake.
 

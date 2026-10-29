@@ -77,7 +77,7 @@ bool SkiaBackend::Initialize(
   SkImageInfo imageInfo =
       SkImageInfo::Make(width, height, colorType, alphaType);
 
-  sk_sp<SkSurface> surface = SkSurface::MakeRaster(imageInfo);
+  sk_sp<SkSurface> surface = SkSurfaces::Raster(imageInfo);
   if(!surface) {
     return false;
   }

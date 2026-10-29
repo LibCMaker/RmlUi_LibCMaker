@@ -5,7 +5,7 @@
 #  Purpose:  A CMake build scripts for build libraries with CMake
 #  Author:   NikitaFeodonit, nfeodonit@yandex.com
 # ****************************************************************************
-#    Copyright (c) 2017-2025 NikitaFeodonit
+#    Copyright (c) 2017-2026 NikitaFeodonit
 #
 #    This file is part of the LibCMaker project.
 #
@@ -31,8 +31,9 @@ fi
 
 cmr_LIB_DEPS_NAMES=(
   "LibCMaker"
-  "LibCMaker_GoogleTest"
-  #"LibCMaker_ICU"
-  "LibCMaker_Skia"
-  "LibCMaker_RmlUi"
+  "GoogleTest_LibCMaker"
+  "ICU_LibCMaker"
+  "Dawn_LibCMaker"
+  "Skia_LibCMaker"
+  "RmlUi_LibCMaker"
 )

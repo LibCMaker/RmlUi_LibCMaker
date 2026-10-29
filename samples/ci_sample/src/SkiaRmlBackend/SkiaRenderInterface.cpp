@@ -36,8 +36,10 @@
 
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkData.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkPixmap.h"
+#include "include/core/SkShader.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkVertices.h"
 
@@ -337,8 +339,8 @@ Rml::TextureHandle SkiaRenderInterface::GenerateTexture(
     // We always make 32bit textures.
     SkImageInfo info = SkImageInfo::Make(sd.x, sd.y, COLOR_TYPE, ALPHA_TYPE);
 
-    if(sk_sp<SkImage> img =
-           SkImage::MakeRasterData(info, std::move(data), info.minRowBytes())) {
+    if(sk_sp<SkImage> img = SkImages::RasterFromData(
+           info, std::move(data), info.minRowBytes())) {
       sk_sp<SkShader> shader =
           img->makeShader(SkSamplingOptions {}, SkMatrix {});
       auto* paint = new SkPaint {};

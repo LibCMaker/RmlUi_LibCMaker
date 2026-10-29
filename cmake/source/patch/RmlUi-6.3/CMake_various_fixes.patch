@@ -1,0 +1,29 @@
+diff --git a/CMake/Utilities.cmake b/CMake/Utilities.cmake
+index ca7f697..b10d693 100644
+--- a/CMake/Utilities.cmake
++++ b/CMake/Utilities.cmake
+@@ -9,7 +9,7 @@
+ ]]
+ function(generate_rmlui_version_string)
+ 	if(NOT RMLUI_VERSION_RELEASE)
+-		set(RMLUI_VERSION_SUFFIX "-dev")
++#		set(RMLUI_VERSION_SUFFIX "-dev")
+ 	endif()
+ 	if(PROJECT_VERSION_PATCH GREATER 0)
+ 		set(RMLUI_VERSION_PATCH ".${PROJECT_VERSION_PATCH}")
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b3dee25..76d0689 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -10,9 +10,9 @@ project("RmlUi"
+ 
+ set(RMLUI_VERSION_RELEASE TRUE)
+ 
+-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
++#if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+ 	set(RMLUI_IS_ROOT_PROJECT TRUE)
+-endif()
++#endif()
+ 
+ # Add lists of available options for those that support it
+ include("CMake/OptionsLists.cmake")
